@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 using CadastroClientes.Application.Commands;
 using CadastroClientes.Application.DTOs;
 using CadastroClientes.Domain.Exceptions;
-using CadastroClientes.Domain.Entities;
 using CadastroClientes.UnitTests.Support;
 
 namespace CadastroClientes.UnitTests.Application;
@@ -14,7 +13,8 @@ public class CreateClientCommandHandlerTests
     {
         // Arrange
         var repository = new FakeClientRepository();
-        var handler = new CreateClientCommandHandler(repository);
+        var publisher = new FakeMessagePublisher();
+        var handler = new CreateClientCommandHandler(repository, publisher);
         var command = new CreateClientCommand
         {
             Name = "Maria Silva",
@@ -32,6 +32,7 @@ public class CreateClientCommandHandlerTests
         Assert.Equal("maria.silva@email.com", result.Email);
         Assert.NotEqual(Guid.Empty, result.Id);
         Assert.Equal(1, repository.AddCalls);
+        Assert.Equal(1, publisher.PublishCalls);
     }
 
     [Theory]
@@ -44,7 +45,8 @@ public class CreateClientCommandHandlerTests
     {
         // Arrange
         var repository = new FakeClientRepository();
-        var handler = new CreateClientCommandHandler(repository);
+        var publisher = new FakeMessagePublisher();
+        var handler = new CreateClientCommandHandler(repository, publisher);
         var command = new CreateClientCommand
         {
             Name = name,
@@ -59,6 +61,7 @@ public class CreateClientCommandHandlerTests
         var exception = await Assert.ThrowsAsync<DomainValidationException>(act);
         Assert.Equal(expectedMessage, exception.Message);
         Assert.Equal(0, repository.AddCalls);
+        Assert.Equal(0, publisher.PublishCalls);
     }
 
     [Fact]

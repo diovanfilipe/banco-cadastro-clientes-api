@@ -24,7 +24,7 @@ public class ClientesControllerTests
                 CreatedAt = new DateTimeOffset(2026, 8, 31, 10, 0, 0, TimeSpan.Zero)
             }
         };
-        var controller = new ClientesController(sender);
+        var controller = new ClientesController(sender.Sender);
         var command = new CreateClientCommand
         {
             Name = "Maria Silva",
@@ -58,7 +58,7 @@ public class ClientesControllerTests
         {
             Response = client
         };
-        var controller = new ClientesController(sender);
+        var controller = new ClientesController(sender.Sender);
 
         // Act
         var result = await controller.GetById(client.Id, CancellationToken.None);
@@ -77,7 +77,7 @@ public class ClientesControllerTests
         {
             Response = null
         };
-        var controller = new ClientesController(sender);
+        var controller = new ClientesController(sender.Sender);
 
         // Act
         var result = await controller.GetById(Guid.NewGuid(), CancellationToken.None);

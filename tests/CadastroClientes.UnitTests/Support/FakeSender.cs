@@ -1,54 +1,89 @@
-using CadastroClientes.Application.Commands;
-using CadastroClientes.Application.DTOs;
-using CadastroClientes.Application.Queries;
 using MediatR;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace CadastroClientes.UnitTests.Support;
 
-internal sealed class FakeSender : ISender
+internal sealed class FakeSender
 {
-    public object? LastRequest { get; private set; }
+    public FakeSender()
+    {
+        Sender = DispatchProxy.Create<ISender, SenderProxy>();
+        SenderProxy.Register(Sender, this);
+    }
 
-    public CancellationToken LastCancellationToken { get; private set; }
+    public ISender Sender { get; }
+
+    public object? LastRequest { get; internal set; }
+
+    public CancellationToken LastCancellationToken { get; internal set; }
 
     public object? Response { get; set; }
 
-    public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+    private class SenderProxy : DispatchProxy
     {
-        LastRequest = request;
-        LastCancellationToken = cancellationToken;
-        return Task.FromResult((TResponse)Response!);
-    }
+        private static readonly ConditionalWeakTable<object, FakeSender> States = new();
 
-    public Task<object?> Send(object request, CancellationToken cancellationToken = default)
-    {
-        LastRequest = request;
-        LastCancellationToken = cancellationToken;
-        return Task.FromResult(Response);
-    }
+        public static void Register(object proxy, FakeSender state)
+        {
+            States.Add(proxy, state);
+        }
 
-    public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
-        where TRequest : IRequest
-    {
-        LastRequest = request;
-        LastCancellationToken = cancellationToken;
-        return Task.CompletedTask;
-    }
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+        {
+            if (targetMethod is null || !States.TryGetValue(this, out var state))
+            {
+                throw new InvalidOperationException("Fake sender was not initialized correctly.");
+            }
 
-    public async IAsyncEnumerable<TResponse> CreateStream<TResponse>(
-        IStreamRequest<TResponse> request,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        await Task.CompletedTask;
-        yield break;
-    }
+            state.LastRequest = args is { Length: > 0 } ? args[0] : null;
+            state.LastCancellationToken = args is { Length: > 1 } && args[1] is CancellationToken token
+                ? token
+                : default;
 
-    public async IAsyncEnumerable<object?> CreateStream(
-        object request,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        await Task.CompletedTask;
-        yield break;
+            if (targetMethod.ReturnType == typeof(Task))
+            {
+                return Task.CompletedTask;
+            }
+
+            if (targetMethod.ReturnType.IsGenericType && targetMethod.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+            {
+                var responseType = targetMethod.ReturnType.GenericTypeArguments[0];
+
+                if (responseType == typeof(object))
+                {
+                    return Task.FromResult(state.Response);
+                }
+
+                var fromResult = typeof(Task)
+                    .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                    .Single(method => method.Name == nameof(Task.FromResult) && method.IsGenericMethodDefinition)
+                    .MakeGenericMethod(responseType);
+
+                return fromResult.Invoke(null, [state.Response])!;
+            }
+
+            if (targetMethod.ReturnType.IsGenericType && targetMethod.ReturnType.GetGenericTypeDefinition() == typeof(IAsyncEnumerable<>))
+            {
+                return CreateEmptyAsyncEnumerable(targetMethod.ReturnType.GenericTypeArguments[0]);
+            }
+
+            return state.Response;
+        }
+
+        private static object CreateEmptyAsyncEnumerable(Type itemType)
+        {
+            var method = typeof(SenderProxy)
+                .GetMethod(nameof(CreateEmptyAsyncEnumerableCore), BindingFlags.NonPublic | BindingFlags.Static)!
+                .MakeGenericMethod(itemType);
+
+            return method.Invoke(null, null)!;
+        }
+
+        private static async IAsyncEnumerable<T> CreateEmptyAsyncEnumerableCore<T>()
+        {
+            await Task.CompletedTask;
+            yield break;
+        }
     }
 }
