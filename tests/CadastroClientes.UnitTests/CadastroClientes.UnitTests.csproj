@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -21,6 +21,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\CadastroClientes.Domain\CadastroClientes.Domain.csproj" />
     <ProjectReference Include="..\..\src\CadastroClientes.Application\CadastroClientes.Application.csproj" />
+    <ProjectReference Include="..\..\src\CadastroClientes.Infrastructure\CadastroClientes.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\CadastroClientes.Api\CadastroClientes.Api.csproj" />
   </ItemGroup>
 
 </Project>
