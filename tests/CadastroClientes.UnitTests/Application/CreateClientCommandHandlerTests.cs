@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using CadastroClientes.Application.Commands;
 using CadastroClientes.Application.DTOs;
+using CadastroClientes.Application.Messaging.Events;
 using CadastroClientes.Domain.Exceptions;
 using CadastroClientes.UnitTests.Support;
 
@@ -33,6 +34,14 @@ public class CreateClientCommandHandlerTests
         Assert.NotEqual(Guid.Empty, result.Id);
         Assert.Equal(1, repository.AddCalls);
         Assert.Equal(1, publisher.PublishCalls);
+
+        var publishedEvent = Assert.IsType<ClienteCadastradoEvent>(publisher.LastMessage);
+        Assert.NotEqual(Guid.Empty, publishedEvent.EventId);
+        Assert.NotEqual(default, publishedEvent.OccurredAt);
+        Assert.Equal(result.Id, publishedEvent.ClientId);
+        Assert.Equal(result.Name, publishedEvent.Name);
+        Assert.Equal(result.Cpf, publishedEvent.Cpf);
+        Assert.Equal(result.Email, publishedEvent.Email);
     }
 
     [Theory]
