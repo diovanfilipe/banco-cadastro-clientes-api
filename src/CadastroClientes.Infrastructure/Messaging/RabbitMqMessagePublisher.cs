@@ -33,7 +33,12 @@ public sealed class RabbitMqMessagePublisher : IMessagePublisher
         await using var connection = await factory.CreateConnectionAsync(cancellationToken);
         await using var channel = await connection.CreateChannelAsync();
 
-        await channel.ExchangeDeclareAsync(_options.ExchangeName, _options.ExchangeType);
+        await channel.ExchangeDeclareAsync(
+            exchange: _options.ExchangeName,
+            type: _options.ExchangeType,
+            durable: true,
+            autoDelete: false,
+            cancellationToken: cancellationToken);
 
         var body = JsonSerializer.SerializeToUtf8Bytes(message);
         var properties = new BasicProperties
