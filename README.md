@@ -212,7 +212,7 @@ Cobertura de testes atual:
 - Dapper para acesso leve ao SQLite;
 - SQLite em memoria para evitar dependencia externa nesta fase;
 - RabbitMQ abstraido na Application para nao acoplar o handler ao provider;
-- Routing Key definida explicitamente em `Domain/Constants/Constants.cs`, dentro de `RabbitMqConstantes`, mantendo o publisher reutilizavel sem acoplar o contrato RabbitMQ ao nome da classe;
+- Exchange, Exchange Type e Routing Key definidos explicitamente em `Domain/Constants/Constants.cs`, dentro de `RabbitMqConstantes`, mantendo a topologia centralizada e o publisher sem acoplamento ao nome da classe;
 - testes unitarios com mocks, sem subir infraestrutura;
 - middleware global para padronizar respostas de erro.
 
@@ -234,5 +234,3 @@ Cobertura de testes atual:
 - `RabbitMq:VirtualHost`
 - `RabbitMq:UserName`
 - `RabbitMq:Password`
-- `RabbitMq:ExchangeName`
-- `RabbitMq:ExchangeType`

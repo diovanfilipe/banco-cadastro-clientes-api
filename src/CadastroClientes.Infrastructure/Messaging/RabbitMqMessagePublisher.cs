@@ -1,8 +1,10 @@
 using System.Text;
 using System.Text.Json;
 using CadastroClientes.Application.Interfaces;
+using CadastroClientes.Domain.Constants;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
+using DomainConstants = CadastroClientes.Domain.Constants.Constants;
 
 namespace CadastroClientes.Infrastructure.Messaging;
 
@@ -37,8 +39,8 @@ public sealed class RabbitMqMessagePublisher : IMessagePublisher
         await using var channel = await connection.CreateChannelAsync();
 
         await channel.ExchangeDeclareAsync(
-            exchange: _options.ExchangeName,
-            type: _options.ExchangeType,
+            exchange: DomainConstants.RabbitMqConstantes.ClienteCadastradoExchangeName,
+            type: DomainConstants.RabbitMqConstantes.ExchangeType,
             durable: true,
             autoDelete: false,
             cancellationToken: cancellationToken);
@@ -50,10 +52,13 @@ public sealed class RabbitMqMessagePublisher : IMessagePublisher
             Persistent = true
         };
 
-        _logger.LogInformation("Publishing message {MessageType} to {Exchange}", typeof(TMessage).Name, _options.ExchangeName);
+        _logger.LogInformation(
+            "Publishing message {MessageType} to {Exchange}",
+            typeof(TMessage).Name,
+            DomainConstants.RabbitMqConstantes.ClienteCadastradoExchangeName);
 
         await channel.BasicPublishAsync(
-            exchange: _options.ExchangeName,
+            exchange: DomainConstants.RabbitMqConstantes.ClienteCadastradoExchangeName,
             routingKey: routingKey,
             mandatory: false,
             basicProperties: properties,

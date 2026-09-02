@@ -28,9 +28,7 @@ public static class DependencyInjection
             Port = int.TryParse(rabbitSection["Port"], out var port) ? port : 5672,
             VirtualHost = rabbitSection["VirtualHost"] ?? "/",
             UserName = rabbitSection["UserName"] ?? "guest",
-            Password = rabbitSection["Password"] ?? "guest",
-            ExchangeName = rabbitSection["ExchangeName"] ?? "clientes.events",
-            ExchangeType = rabbitSection["ExchangeType"] ?? "direct"
+            Password = rabbitSection["Password"] ?? "guest"
         });
         services.AddSingleton<IMessagePublisher, RabbitMqMessagePublisher>();
 

@@ -12,7 +12,4 @@ public sealed class RabbitMqOptions
 
     public string Password { get; init; } = "guest";
 
-    public string ExchangeName { get; init; } = "clientes.events";
-
-    public string ExchangeType { get; init; } = "direct";
 }
