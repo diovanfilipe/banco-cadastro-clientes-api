@@ -1,4 +1,5 @@
 using CadastroClientes.Domain.Entities;
+using CadastroClientes.Domain.Exceptions;
 using CadastroClientes.Infrastructure.Persistence;
 using CadastroClientes.Infrastructure.Repositories;
 
@@ -47,6 +48,25 @@ public class ClientRepositoryTests
 
         // Assert
         Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task AddAsync_WhenCpfAlreadyExists_ShouldThrowClientAlreadyExistsException()
+    {
+        // Arrange
+        using var factory = CreateFactory();
+        var initializer = new SqliteSchemaInitializer(factory);
+        initializer.Initialize();
+        var repository = new ClientRepository(factory);
+        var firstClient = Client.Create("Maria Silva", "529.982.247-25", "maria.silva@email.com");
+        var duplicateClient = Client.Create("Joao Silva", "529.982.247-25", "joao.silva@email.com");
+        await repository.AddAsync(firstClient, CancellationToken.None);
+
+        // Act
+        var act = () => repository.AddAsync(duplicateClient, CancellationToken.None);
+
+        // Assert
+        await Assert.ThrowsAsync<ClientAlreadyExistsException>(act);
     }
 
     private static SqliteConnectionFactory CreateFactory()

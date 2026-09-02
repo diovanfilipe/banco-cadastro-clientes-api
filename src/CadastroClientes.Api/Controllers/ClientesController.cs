@@ -20,6 +20,7 @@ public sealed class ClientesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(ClientDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ClientDto>> Create([FromBody] CreateClientCommand command, CancellationToken cancellationToken)
     {

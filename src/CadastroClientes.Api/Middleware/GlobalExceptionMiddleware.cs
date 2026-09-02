@@ -26,6 +26,11 @@ public sealed class GlobalExceptionMiddleware
             _logger.LogWarning(ex, "Domain validation error");
             await WriteProblemDetailsAsync(context, StatusCodes.Status400BadRequest, "Validation error", ex.Message);
         }
+        catch (ClientAlreadyExistsException ex)
+        {
+            _logger.LogWarning(ex, "Client registration conflict");
+            await WriteProblemDetailsAsync(context, StatusCodes.Status409Conflict, "Conflict", ex.Message);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception");

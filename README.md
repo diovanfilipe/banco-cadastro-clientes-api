@@ -94,6 +94,31 @@ Execucao da imagem:
 docker run --rm -p 8080:8080 cadastro-clientes-api:latest
 ```
 
+### Ambiente integrado
+
+Para executar os tres microsservicos e o RabbitMQ, clone os tres repositorios como diretorios vizinhos:
+
+```text
+TesteParanaBanco/
+  banco-cadastro-clientes-api/
+  banco-proposta-credito/
+  banco-cartao-credito/
+```
+
+A partir deste diretorio, execute:
+
+```powershell
+docker compose up --build
+```
+
+Portas do ambiente integrado:
+- Cadastro: `http://localhost:5001`
+- Proposta: `http://localhost:5002`
+- Cartao: `http://localhost:5003`
+- RabbitMQ Management: `http://localhost:15672` (`guest`/`guest`)
+
+O RabbitMQ e acessado pelos microsservicos pelo nome do servico Docker `rabbitmq`.
+
 ## Endpoints
 
 ### POST /api/v1/clientes
@@ -112,6 +137,9 @@ Entrada esperada:
 
 Resposta de sucesso:
 - `201 Created`
+
+Quando CPF ou e-mail ja estiver cadastrado:
+- `409 Conflict`
 
 ### GET /api/v1/clientes/{id}
 Consulta um cliente pelo id.

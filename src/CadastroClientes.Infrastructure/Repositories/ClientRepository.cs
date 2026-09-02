@@ -1,6 +1,8 @@
 using CadastroClientes.Domain.Entities;
+using CadastroClientes.Domain.Exceptions;
 using CadastroClientes.Domain.IRepositories;
 using Dapper;
+using Microsoft.Data.Sqlite;
 
 namespace CadastroClientes.Infrastructure.Repositories;
 
@@ -21,14 +23,21 @@ public sealed class ClientRepository : IClientRepository
             """;
 
         using var connection = _connectionFactory.CreateConnection();
-        await connection.ExecuteAsync(new CommandDefinition(sql, new
+        try
         {
-            Id = client.Id.ToString(),
-            client.Name,
-            Cpf = client.Cpf.Value,
-            Email = client.Email.Value,
-            CreatedAt = client.CreatedAt.ToString("O")
-        }, cancellationToken: cancellationToken));
+            await connection.ExecuteAsync(new CommandDefinition(sql, new
+            {
+                Id = client.Id.ToString(),
+                client.Name,
+                Cpf = client.Cpf.Value,
+                Email = client.Email.Value,
+                CreatedAt = client.CreatedAt.ToString("O")
+            }, cancellationToken: cancellationToken));
+        }
+        catch (SqliteException exception) when (exception.SqliteErrorCode == 19)
+        {
+            throw new ClientAlreadyExistsException();
+        }
     }
 
     public async Task<Client?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
