@@ -202,7 +202,8 @@ Cobertura de testes atual:
 - dominio;
 - application;
 - controller;
-- publicacao do evento via fake.
+- publicacao do evento via mock;
+- conflito de unicidade do CPF no repositorio.
 
 ## Decisoes tecnicas
 
