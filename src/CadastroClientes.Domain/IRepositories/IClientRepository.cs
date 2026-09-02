@@ -1,6 +1,6 @@
 using CadastroClientes.Domain.Entities;
 
-namespace CadastroClientes.Application.Abstractions;
+namespace CadastroClientes.Domain.IRepositories;
 
 public interface IClientRepository
 {

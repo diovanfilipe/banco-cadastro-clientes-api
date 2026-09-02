@@ -1,6 +1,6 @@
 using System.Text;
 using System.Text.Json;
-using CadastroClientes.Application.Abstractions;
+using CadastroClientes.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 
@@ -17,7 +17,10 @@ public sealed class RabbitMqMessagePublisher : IMessagePublisher
         _logger = logger;
     }
 
-    public async Task PublishAsync<TMessage>(TMessage message, CancellationToken cancellationToken = default)
+    public async Task PublishAsync<TMessage>(
+        TMessage message,
+        string routingKey,
+        CancellationToken cancellationToken = default)
         where TMessage : class
     {
         var factory = new ConnectionFactory
@@ -46,8 +49,6 @@ public sealed class RabbitMqMessagePublisher : IMessagePublisher
             ContentType = "application/json",
             Persistent = true
         };
-
-        var routingKey = typeof(TMessage).Name;
 
         _logger.LogInformation("Publishing message {MessageType} to {Exchange}", typeof(TMessage).Name, _options.ExchangeName);
 

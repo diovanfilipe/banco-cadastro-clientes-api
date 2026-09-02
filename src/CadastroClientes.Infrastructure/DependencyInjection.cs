@@ -1,4 +1,5 @@
-using CadastroClientes.Application.Abstractions;
+using CadastroClientes.Application.Interfaces;
+using CadastroClientes.Domain.IRepositories;
 using CadastroClientes.Infrastructure.Persistence;
 using CadastroClientes.Infrastructure.Repositories;
 using CadastroClientes.Infrastructure.Messaging;

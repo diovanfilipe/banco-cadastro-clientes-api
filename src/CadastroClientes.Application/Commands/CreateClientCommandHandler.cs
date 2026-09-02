@@ -1,7 +1,9 @@
-using CadastroClientes.Application.Abstractions;
 using CadastroClientes.Application.DTOs;
 using CadastroClientes.Application.Messaging.Events;
 using CadastroClientes.Domain.Entities;
+using CadastroClientes.Domain.IRepositories;
+using CadastroClientes.Application.Interfaces;
+using CadastroClientes.Domain.Constants;
 using MediatR;
 
 namespace CadastroClientes.Application.Commands;
@@ -32,10 +34,14 @@ public sealed class CreateClientCommandHandler : IRequestHandler<CreateClientCom
             ClientId = client.Id,
             Name = client.Name,
             Cpf = client.Cpf.Value,
-            Email = client.Email.Value
+            Email = client.Email.Value,
+            Score = request.Score!.Value
         };
 
-        await _messagePublisher.PublishAsync(integrationEvent, cancellationToken);
+        await _messagePublisher.PublishAsync(
+            integrationEvent,
+            Constants.RabbitMqConstantes.ClienteCadastradoRoutingKey,
+            cancellationToken);
 
         return new ClientDto
         {

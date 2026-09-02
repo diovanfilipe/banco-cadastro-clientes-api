@@ -3,7 +3,11 @@ using CadastroClientes.Application.Commands;
 using CadastroClientes.Application.DTOs;
 using CadastroClientes.Application.Messaging.Events;
 using CadastroClientes.Domain.Exceptions;
-using CadastroClientes.UnitTests.Support;
+using CadastroClientes.Domain.Entities;
+using CadastroClientes.Domain.IRepositories;
+using CadastroClientes.Domain.Constants;
+using CadastroClientes.Application.Interfaces;
+using Moq;
 
 namespace CadastroClientes.UnitTests.Application;
 
@@ -13,14 +17,15 @@ public class CreateClientCommandHandlerTests
     public async Task Handle_WithValidCommand_ShouldPersistAndReturnDto()
     {
         // Arrange
-        var repository = new FakeClientRepository();
-        var publisher = new FakeMessagePublisher();
-        var handler = new CreateClientCommandHandler(repository, publisher);
+        var repository = new Mock<IClientRepository>();
+        var publisher = new Mock<IMessagePublisher>();
+        var handler = new CreateClientCommandHandler(repository.Object, publisher.Object);
         var command = new CreateClientCommand
         {
             Name = "Maria Silva",
             Cpf = "529.982.247-25",
-            Email = "maria.silva@email.com"
+            Email = "maria.silva@email.com",
+            Score = 500
         };
 
         // Act
@@ -32,10 +37,23 @@ public class CreateClientCommandHandlerTests
         Assert.Equal("52998224725", result.Cpf);
         Assert.Equal("maria.silva@email.com", result.Email);
         Assert.NotEqual(Guid.Empty, result.Id);
-        Assert.Equal(1, repository.AddCalls);
-        Assert.Equal(1, publisher.PublishCalls);
+        repository.Verify(
+            item => item.AddAsync(It.IsAny<Client>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        publisher.Verify(
+            item => item.PublishAsync(
+                It.Is<ClienteCadastradoEvent>(message =>
+                    message.ClientId == result.Id &&
+                    message.Name == result.Name &&
+                    message.Cpf == result.Cpf &&
+                    message.Email == result.Email &&
+                    message.Score == 500),
+                Constants.RabbitMqConstantes.ClienteCadastradoRoutingKey,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
 
-        var publishedEvent = Assert.IsType<ClienteCadastradoEvent>(publisher.LastMessage);
+        var publishedEvent = Assert.IsType<ClienteCadastradoEvent>(
+            publisher.Invocations.Single().Arguments[0]);
         Assert.NotEqual(Guid.Empty, publishedEvent.EventId);
         Assert.NotEqual(default, publishedEvent.OccurredAt);
         Assert.Equal(result.Id, publishedEvent.ClientId);
@@ -53,14 +71,15 @@ public class CreateClientCommandHandlerTests
     public async Task Handle_WithInvalidData_ShouldThrow(string? name, string? cpf, string? email, string expectedMessage)
     {
         // Arrange
-        var repository = new FakeClientRepository();
-        var publisher = new FakeMessagePublisher();
-        var handler = new CreateClientCommandHandler(repository, publisher);
+        var repository = new Mock<IClientRepository>();
+        var publisher = new Mock<IMessagePublisher>();
+        var handler = new CreateClientCommandHandler(repository.Object, publisher.Object);
         var command = new CreateClientCommand
         {
-            Name = name,
-            Cpf = cpf,
-            Email = email
+            Name = name!,
+            Cpf = cpf!,
+            Email = email!,
+            Score = 500
         };
 
         // Act
@@ -69,8 +88,15 @@ public class CreateClientCommandHandlerTests
         // Assert
         var exception = await Assert.ThrowsAsync<DomainValidationException>(act);
         Assert.Equal(expectedMessage, exception.Message);
-        Assert.Equal(0, repository.AddCalls);
-        Assert.Equal(0, publisher.PublishCalls);
+        repository.Verify(
+            item => item.AddAsync(It.IsAny<Client>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        publisher.Verify(
+            item => item.PublishAsync(
+                It.IsAny<ClienteCadastradoEvent>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -79,9 +105,10 @@ public class CreateClientCommandHandlerTests
         // Arrange
         var command = new CreateClientCommand
         {
-            Name = null,
+            Name = null!,
             Cpf = "123",
-            Email = "invalid-email"
+            Email = "invalid-email",
+            Score = 500
         };
         var context = new ValidationContext(command);
         var results = new List<ValidationResult>();

@@ -1,5 +1,5 @@
-using CadastroClientes.Application.Abstractions;
 using CadastroClientes.Application.DTOs;
+using CadastroClientes.Domain.IRepositories;
 using MediatR;
 
 namespace CadastroClientes.Application.Queries;

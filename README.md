@@ -105,7 +105,8 @@ Entrada esperada:
 {
   "name": "Maria Silva",
   "cpf": "529.982.247-25",
-  "email": "maria.silva@email.com"
+  "email": "maria.silva@email.com",
+  "score": 500
 }
 ```
 
@@ -127,6 +128,7 @@ As validacoes de entrada usam data annotations e regra de dominio:
 - campos obrigatorios;
 - CPF;
 - e-mail;
+- score entre 0 e 1000;
 - dados invalidos.
 
 ## Banco de dados
@@ -149,7 +151,8 @@ Contrato do evento:
   "clientId": "guid",
   "name": "string",
   "cpf": "string",
-  "email": "string"
+  "email": "string",
+  "score": 500
 }
 ```
 
@@ -180,7 +183,8 @@ Cobertura de testes atual:
 - Dapper para acesso leve ao SQLite;
 - SQLite em memoria para evitar dependencia externa nesta fase;
 - RabbitMQ abstraido na Application para nao acoplar o handler ao provider;
-- testes unitarios com fakes, sem subir infraestrutura;
+- Routing Key definida explicitamente em `Domain/Constants/Constants.cs`, dentro de `RabbitMqConstantes`, mantendo o publisher reutilizavel sem acoplar o contrato RabbitMQ ao nome da classe;
+- testes unitarios com mocks, sem subir infraestrutura;
 - middleware global para padronizar respostas de erro.
 
 ## Limitacoes atuais

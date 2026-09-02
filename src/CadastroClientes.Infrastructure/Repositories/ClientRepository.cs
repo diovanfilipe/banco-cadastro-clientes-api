@@ -1,5 +1,5 @@
-using CadastroClientes.Application.Abstractions;
 using CadastroClientes.Domain.Entities;
+using CadastroClientes.Domain.IRepositories;
 using Dapper;
 
 namespace CadastroClientes.Infrastructure.Repositories;
